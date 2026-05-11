@@ -1,4 +1,4 @@
-import { AlertTriangle, Phone, MessageCircle, LogOut } from 'lucide-react';
+import { AlertTriangle, Phone, MessageCircle, LogOut, X, Eye } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,8 +8,12 @@ const WHATSAPP_NUMBER = '9647748312099';
 
 export default function BlockedScreen({
   reason,
+  preview = false,
+  onClose,
 }: {
   reason: 'disabled' | 'expired';
+  preview?: boolean;
+  onClose?: () => void;
 }) {
   const { user, logout } = useAuthStore();
   const nav = useNavigate();
@@ -25,7 +29,18 @@ export default function BlockedScreen({
   )}`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-white to-amber-50">
+    <div className={`${preview ? 'fixed inset-0 z-50' : 'min-h-screen'} flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-white to-amber-50`}>
+      {preview && (
+        <div className="absolute top-0 inset-x-0 bg-amber-500 text-white px-4 py-2.5 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Eye size={18} />
+            <span>وضع المعاينة — هذا ما سيراه صاحب المتجر عند {reason === 'expired' ? 'انتهاء الاشتراك' : 'تعطيل المتجر'}</span>
+          </div>
+          <button onClick={onClose} className="hover:bg-amber-600 rounded-lg p-1.5" aria-label="إغلاق">
+            <X size={18} />
+          </button>
+        </div>
+      )}
       <div className="card w-full max-w-lg p-8 sm:p-10 text-center">
         <div className="w-20 h-20 rounded-3xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-5 shadow-md">
           <AlertTriangle size={42} />
@@ -51,13 +66,15 @@ export default function BlockedScreen({
           التواصل عبر واتساب
         </a>
 
-        <button
-          onClick={() => { logout(); nav('/login'); }}
-          className="btn-ghost w-full mt-3 !text-slate-500"
-        >
-          <LogOut size={18} />
-          تسجيل الخروج
-        </button>
+        {!preview && (
+          <button
+            onClick={() => { logout(); nav('/login'); }}
+            className="btn-ghost w-full mt-3 !text-slate-500"
+          >
+            <LogOut size={18} />
+            تسجيل الخروج
+          </button>
+        )}
       </div>
     </div>
   );

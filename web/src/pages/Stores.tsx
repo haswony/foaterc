@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { PageHeader, Modal, Empty, ShimmerTable } from '@/components/ui';
 import { Plus, Store as StoreIcon } from 'lucide-react';
+import BlockedScreen from '@/components/BlockedScreen';
 import toast from 'react-hot-toast';
 import { formatDate, CURRENCIES } from '@/lib/format';
 import { useConfirm } from '@/components/useConfirm';
@@ -74,6 +75,9 @@ export default function Stores() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Preview blocked screen
+  const [previewReason, setPreviewReason] = useState<'disabled' | 'expired' | null>(null);
+
   // Subscription modal
   const [subStore, setSubStore] = useState<Store | null>(null);
   const [subForm, setSubForm] = useState<{ plan: 'FREE' | 'MONTHLY'; months: number; extend: boolean }>({ plan: 'MONTHLY', months: 1, extend: true });
@@ -102,11 +106,23 @@ export default function Stores() {
         title="المتاجر"
         subtitle="إدارة المتاجر التابعة لنظامك"
         actions={
-          <button className="btn-primary" onClick={() => setOpen(true)}>
-            <Plus size={18} /> متجر جديد
-          </button>
+          <>
+            <button className="btn-ghost" onClick={() => setPreviewReason('expired')}>
+              معاينة شاشة الانتهاء
+            </button>
+            <button className="btn-ghost" onClick={() => setPreviewReason('disabled')}>
+              معاينة شاشة التعطيل
+            </button>
+            <button className="btn-primary" onClick={() => setOpen(true)}>
+              <Plus size={18} /> متجر جديد
+            </button>
+          </>
         }
       />
+
+      {previewReason && (
+        <BlockedScreen reason={previewReason} preview onClose={() => setPreviewReason(null)} />
+      )}
 
       <div className="card overflow-hidden">
         {isLoading ? (
