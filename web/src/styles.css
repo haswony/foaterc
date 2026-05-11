@@ -4,7 +4,7 @@
 
 html, body, #root { height: 100%; }
 body {
-  font-family: 'Tajawal', system-ui, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: #f6f7fb;
   color: #0f172a;
   font-size: 16px;

@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   X,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { useSettings } from '@/store/settings';
@@ -27,6 +28,7 @@ const navItems: { to: string; label: string; icon: ReactNode; roles: Role[] }[] 
   { to: '/debts', label: 'الديون', icon: <Wallet size={22} />, roles: ['SUPER_ADMIN', 'STORE_OWNER', 'STAFF'] },
   { to: '/payments', label: 'الدفعات', icon: <Receipt size={22} />, roles: ['SUPER_ADMIN', 'STORE_OWNER', 'STAFF'] },
   { to: '/users', label: 'الموظفون', icon: <UserCog size={22} />, roles: ['STORE_OWNER', 'SUPER_ADMIN'] },
+  { to: '/settings', label: 'الإعدادات', icon: <SettingsIcon size={22} />, roles: ['STORE_OWNER', 'STAFF'] },
 ];
 
 function StoreSwitcher() {

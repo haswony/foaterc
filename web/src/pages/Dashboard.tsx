@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { PageHeader, StatCard, Empty, ShimmerPage, ShimmerCard, ShimmerCards } from '@/components/ui';
 import Money from '@/components/Money';
+import SubscriptionCountdown from '@/components/SubscriptionCountdown';
+import { useSettings } from '@/store/settings';
 import {
   Wallet, TrendingUp, AlertTriangle, Users, Receipt, ArrowDownCircle, Activity, FileText,
   Sun, Phone, MessageCircle, Clock, ArrowLeft,
@@ -48,6 +50,8 @@ function normalizePhoneForWa(phone: string): string {
 
 export default function Dashboard() {
   const activeStoreId = useAuthStore((s) => s.activeStoreId);
+  const user = useAuthStore((s) => s.user);
+  const store = useSettings((s) => s.store);
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard', activeStoreId],
     queryFn: () => api<{ data: Summary }>('/api/dashboard/summary'),
@@ -115,6 +119,13 @@ export default function Dashboard() {
   return (
     <div>
       <PageHeader title="لوحة التحكم" subtitle="نظرة عامة على أداء المتجر" />
+
+      {/* Subscription countdown for store users */}
+      {user && user.role !== 'SUPER_ADMIN' && store && (
+        <div className="mb-5">
+          <SubscriptionCountdown store={store} />
+        </div>
+      )}
 
       {/* Late warning banner */}
       {(t?.lateCount ?? 0) > 0 && (
