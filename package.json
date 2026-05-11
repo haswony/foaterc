@@ -1,0 +1,13 @@
+{
+  "name": "aksat-full",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:api": "cd api && npm run dev",
+    "dev:web": "cd web && npm run dev",
+    "dev:full": "concurrently \"npm run dev:api\" \"npm run dev:web\" --names \"API,WEB\" --prefix-colors cyan,green"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

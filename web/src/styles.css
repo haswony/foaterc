@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body {
+  font-family: 'Tajawal', system-ui, sans-serif;
+  background: #f6f7fb;
+  color: #0f172a;
+  font-size: 16px;
+  /* Force Latin (English) digits everywhere */
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: 'lnum' 1, 'tnum' 1;
+}
+
+/* Numbers always LTR with English digits */
+.num, [data-num] { direction: ltr; unicode-bidi: embed; font-variant-numeric: tabular-nums; }
+input[type=number], input[type=date], input[type=tel], input[type=email] { direction: ltr; text-align: left; }
+
+/* Icons inside buttons get consistent vertical alignment */
+.btn svg, .badge svg { flex-shrink: 0; }
+
+/* Custom utilities */
+@layer components {
+  .nav-link { @apply flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors text-base font-medium; }
+  .nav-link.active { @apply bg-brand-50 text-brand-700 hover:bg-brand-50 font-semibold; }
+  .card { @apply bg-white rounded-2xl shadow-soft border border-slate-100; }
+  .btn { @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-[15px] transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]; }
+  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700 shadow-sm; }
+  .btn-ghost { @apply btn bg-slate-100 hover:bg-slate-200 text-slate-700; }
+  .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
+  .btn-success { @apply btn bg-emerald-600 text-white hover:bg-emerald-700; }
+  .input { @apply w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[15px] focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition-shadow; }
+  .label { @apply block text-sm font-semibold text-slate-700 mb-1.5; }
+  .badge { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold; }
+  .table-th { @apply text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide bg-slate-50; }
+  .table-td { @apply px-4 py-3 text-[15px] text-slate-700 border-t border-slate-100; }
+  .stat-card { @apply card p-5 flex items-center gap-4; }
+  .stat-icon { @apply w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0; }
+}
+
+@media print {
+  body { background: white; }
+  .no-print { display: none !important; }
+}

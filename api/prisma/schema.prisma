@@ -1,0 +1,148 @@
+// Prisma schema — Debt & Installment Management System
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  STORE_OWNER
+  STAFF
+}
+
+enum DebtType {
+  FULL
+  INSTALLMENT
+}
+
+enum InstallmentFreq {
+  WEEKLY
+  MONTHLY
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  LATE
+  PARTIAL
+}
+
+enum DebtStatus {
+  ACTIVE
+  CLOSED
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  name      String
+  ownerName String?
+  phone     String?
+  address   String?
+  currency  String   @default("IQD")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  customers Customer[]
+  debts     Debt[]
+  payments  Payment[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role
+  isActive  Boolean  @default(true)
+  storeId   String?
+  store     Store?   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments  Payment[] @relation("RecordedBy")
+
+  @@index([storeId])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  debts     Debt[]
+
+  @@index([storeId])
+  @@index([storeId, name])
+}
+
+model Debt {
+  id           String          @id @default(cuid())
+  storeId      String
+  store        Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customerId   String
+  customer     Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount       Decimal         @db.Decimal(14, 2)
+  description  String?
+  debtDate     DateTime
+  dueDate      DateTime?
+  type         DebtType
+  freq         InstallmentFreq?
+  installments Int?            // total number of installments (if INSTALLMENT)
+  status       DebtStatus      @default(ACTIVE)
+  archivedAt   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  schedule     Installment[]
+  payments     Payment[]
+
+  @@index([storeId])
+  @@index([customerId])
+  @@index([archivedAt])
+}
+
+model Installment {
+  id        String            @id @default(cuid())
+  debtId    String
+  debt      Debt              @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  seq       Int
+  dueDate   DateTime
+  amount    Decimal           @db.Decimal(14, 2)
+  paid      Decimal           @default(0) @db.Decimal(14, 2)
+  status    InstallmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([debtId])
+  @@index([dueDate])
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  storeId       String
+  store         Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  debtId        String
+  debt          Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  installmentId String?
+  amount        Decimal  @db.Decimal(14, 2)
+  paidAt        DateTime @default(now())
+  note          String?
+  recordedById  String?
+  recordedBy    User?    @relation("RecordedBy", fields: [recordedById], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@index([storeId])
+  @@index([debtId])
+}
