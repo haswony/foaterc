@@ -19,15 +19,11 @@ function diffParts(target: number) {
 
 function pad(n: number) { return String(n).padStart(2, '0'); }
 
-function Box({ value, label, tone }: { value: string; label: string; tone: 'normal' | 'warn' | 'danger' }) {
-  const bg =
-    tone === 'danger' ? 'from-red-500 to-rose-600'
-    : tone === 'warn' ? 'from-amber-400 to-orange-500'
-    : 'from-brand-500 to-brand-700';
+function Box({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex flex-col items-center">
-      <div className={`bg-gradient-to-br ${bg} text-white rounded-2xl shadow-lg shadow-slate-200/60 px-3 sm:px-5 py-3 sm:py-4 min-w-[68px] sm:min-w-[88px] text-center`}>
-        <div className="text-2xl sm:text-4xl font-extrabold tabular-nums tracking-tight" dir="ltr">{value}</div>
+      <div className="bg-white border border-slate-200 rounded-xl px-3 sm:px-5 py-3 sm:py-4 min-w-[68px] sm:min-w-[88px] text-center">
+        <div className="text-2xl sm:text-4xl font-extrabold tabular-nums tracking-tight text-slate-800" dir="ltr">{value}</div>
       </div>
       <div className="mt-2 text-xs sm:text-sm text-slate-500 font-medium">{label}</div>
     </div>
@@ -54,19 +50,19 @@ export default function SubscriptionCountdown({
   if (store.subscriptionPlan === 'FREE') {
     if (variant === 'compact') {
       return (
-        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-sm font-medium">
+        <div className="flex items-center gap-2 text-slate-700 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium">
           <InfinityIcon size={16} />
           <span>اشتراك مجاني — بلا حدود</span>
         </div>
       );
     }
     return (
-      <div className="card p-6 bg-gradient-to-br from-emerald-50 to-white border-2 border-emerald-100">
+      <div className="card p-6 bg-white border border-slate-200">
         <div className="flex items-center gap-3 mb-2">
-          <div className="bg-emerald-100 text-emerald-700 p-2.5 rounded-xl"><CheckCircle2 size={22} /></div>
+          <div className="bg-slate-100 text-slate-600 p-2.5 rounded-xl"><CheckCircle2 size={22} /></div>
           <div>
-            <div className="font-bold text-lg text-emerald-800">اشتراك مجاني</div>
-            <div className="text-sm text-emerald-600">يعمل المتجر بلا تاريخ انتهاء</div>
+            <div className="font-bold text-lg text-slate-800">اشتراك مجاني</div>
+            <div className="text-sm text-slate-500">يعمل المتجر بلا تاريخ انتهاء</div>
           </div>
         </div>
       </div>
@@ -80,19 +76,19 @@ export default function SubscriptionCountdown({
   if (expired) {
     if (variant === 'compact') {
       return (
-        <div className="flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-sm font-bold">
+        <div className="flex items-center gap-2 text-slate-700 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold">
           <AlertTriangle size={16} />
           <span>انتهى الاشتراك</span>
         </div>
       );
     }
     return (
-      <div className="card p-6 bg-gradient-to-br from-red-50 to-white border-2 border-red-200">
+      <div className="card p-6 bg-white border border-slate-200">
         <div className="flex items-center gap-3">
-          <div className="bg-red-100 text-red-600 p-2.5 rounded-xl"><AlertTriangle size={22} /></div>
+          <div className="bg-slate-100 text-slate-600 p-2.5 rounded-xl"><AlertTriangle size={22} /></div>
           <div>
-            <div className="font-bold text-lg text-red-700">انتهى اشتراك المتجر</div>
-            <div className="text-sm text-red-600">يرجى تجديد الاشتراك لمتابعة العمل</div>
+            <div className="font-bold text-lg text-slate-800">انتهى اشتراك المتجر</div>
+            <div className="text-sm text-slate-500">يرجى تجديد الاشتراك لمتابعة العمل</div>
           </div>
         </div>
       </div>
@@ -104,32 +100,23 @@ export default function SubscriptionCountdown({
   const expiryDate = new Date(expiresAt!);
 
   if (variant === 'compact') {
-    const cls = tone === 'danger' ? 'bg-red-50 text-red-700 border-red-200' : tone === 'warn' ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-brand-50 text-brand-700 border-brand-200';
     return (
-      <div className={`flex items-center gap-2 border rounded-xl px-3 py-2 text-sm font-semibold ${cls}`} dir="ltr">
+      <div className="flex items-center gap-2 border border-slate-200 bg-white rounded-xl px-3 py-2 text-sm font-semibold text-slate-700" dir="ltr">
         <Clock size={16} />
         <span className="tabular-nums">{days}d : {pad(hours)}h : {pad(minutes)}m : {pad(seconds)}s</span>
       </div>
     );
   }
 
-  const headerCls =
-    tone === 'danger' ? 'from-red-50 to-white border-red-200'
-    : tone === 'warn' ? 'from-amber-50 to-white border-amber-200'
-    : 'from-brand-50 to-white border-brand-100';
-
   const headerTitle =
-    tone === 'danger' ? 'الاشتراك ينتهي خلال ساعات!' : tone === 'warn' ? 'الاشتراك يقترب من الانتهاء' : 'اشتراك المتجر فعّال';
-
-  const headerIconCls =
-    tone === 'danger' ? 'bg-red-100 text-red-600' : tone === 'warn' ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700';
+    days < 1 ? 'الاشتراك ينتهي خلال ساعات!' : days <= 7 ? 'الاشتراك يقترب من الانتهاء' : 'اشتراك المتجر فعّال';
 
   return (
-    <div className={`card p-5 sm:p-6 bg-gradient-to-br ${headerCls} border-2`}>
+    <div className="card p-5 sm:p-6 bg-white border border-slate-200">
       <div className="flex items-start justify-between mb-5 gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl ${headerIconCls}`}>
-            {tone === 'normal' ? <Clock size={22} /> : <AlertTriangle size={22} />}
+          <div className="p-2.5 rounded-xl bg-slate-100 text-slate-600">
+            {days > 7 ? <Clock size={22} /> : <AlertTriangle size={22} />}
           </div>
           <div>
             <div className="font-bold text-base sm:text-lg text-slate-800">{headerTitle}</div>
@@ -142,10 +129,10 @@ export default function SubscriptionCountdown({
       </div>
 
       <div className="grid grid-cols-4 gap-2 sm:gap-4 justify-items-center" dir="ltr">
-        <Box value={String(days)} label="أيام" tone={tone} />
-        <Box value={pad(hours)} label="ساعات" tone={tone} />
-        <Box value={pad(minutes)} label="دقائق" tone={tone} />
-        <Box value={pad(seconds)} label="ثواني" tone={tone} />
+        <Box value={String(days)} label="أيام" />
+        <Box value={pad(hours)} label="ساعات" />
+        <Box value={pad(minutes)} label="دقائق" />
+        <Box value={pad(seconds)} label="ثواني" />
       </div>
     </div>
   );

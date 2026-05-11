@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { PageHeader, StatCard, Empty, ShimmerPage, ShimmerCard, ShimmerCards } from '@/components/ui';
 import Money from '@/components/Money';
-import SubscriptionCountdown from '@/components/SubscriptionCountdown';
 import { useSettings } from '@/store/settings';
 import {
   Wallet, TrendingUp, AlertTriangle, Users, Receipt, ArrowDownCircle, Activity, FileText,
@@ -119,13 +118,6 @@ export default function Dashboard() {
   return (
     <div>
       <PageHeader title="لوحة التحكم" subtitle="نظرة عامة على أداء المتجر" />
-
-      {/* Subscription countdown for store users */}
-      {user && user.role !== 'SUPER_ADMIN' && store && (
-        <div className="mb-5">
-          <SubscriptionCountdown store={store} />
-        </div>
-      )}
 
       {/* Late warning banner */}
       {(t?.lateCount ?? 0) > 0 && (

@@ -26,40 +26,11 @@ export default function Settings() {
       <PageHeader title="الإعدادات" subtitle="معلومات المتجر وحالة الاشتراك" />
 
       {store && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Subscription countdown - takes 2 columns */}
-          <div className="lg:col-span-2">
-            <SubscriptionCountdown store={store} />
-          </div>
-
-          {/* Support card */}
-          <div className="card p-5 bg-gradient-to-br from-emerald-50 to-white border border-emerald-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-emerald-100 text-emerald-700 p-2.5 rounded-xl">
-                <MessageCircle size={22} />
-              </div>
-              <div>
-                <div className="font-bold text-slate-800">الدعم وتجديد الاشتراك</div>
-                <div className="text-xs text-slate-500">للتجديد أو الاستفسار</div>
-              </div>
-            </div>
-            <div className="text-sm text-slate-600 mb-2">رقم التواصل:</div>
-            <div className="text-xl font-extrabold text-slate-800 mb-4 tabular-nums" dir="ltr">{SUPPORT_PHONE}</div>
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary w-full !bg-emerald-600 hover:!bg-emerald-700"
-            >
-              <MessageCircle size={18} />
-              فتح واتساب
-            </a>
-          </div>
-
+        <div className="grid grid-cols-1 gap-5">
           {/* Store info card */}
-          <div className="card p-6 lg:col-span-3">
+          <div className="card p-6 bg-white border border-slate-200">
             <div className="flex items-center gap-3 mb-5">
-              <div className="bg-brand-50 text-brand-700 p-2.5 rounded-xl">
+              <div className="bg-slate-100 text-slate-600 p-2.5 rounded-xl">
                 <StoreIcon size={22} />
               </div>
               <div>
@@ -73,6 +44,35 @@ export default function Settings() {
               <Field icon={<Phone size={16} />} label="الهاتف" value={store.phone || '—'} ltr />
               <Field icon={<MapPin size={16} />} label="العنوان" value={store.address || '—'} />
             </div>
+          </div>
+
+          {/* Subscription countdown */}
+          <div className="mb-5">
+            <SubscriptionCountdown store={store} />
+          </div>
+
+          {/* Support card */}
+          <div className="card p-5 bg-white border border-slate-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-slate-100 text-slate-600 p-2.5 rounded-xl">
+                <MessageCircle size={22} />
+              </div>
+              <div>
+                <div className="font-bold text-slate-800">الدعم وتجديد الاشتراك</div>
+                <div className="text-xs text-slate-500">للتجديد أو الاستفسار</div>
+              </div>
+            </div>
+            <div className="text-sm text-slate-600 mb-2">رقم التواصل:</div>
+            <div className="text-xl font-extrabold text-slate-800 mb-4 tabular-nums" dir="ltr">{SUPPORT_PHONE}</div>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary w-full"
+            >
+              <MessageCircle size={18} />
+              فتح واتساب
+            </a>
           </div>
         </div>
       )}
