@@ -38,7 +38,10 @@ authRoutes.get('/me', authMiddleware, async (c) => {
   if (u.storeId) {
     store = await prisma.store.findUnique({
       where: { id: u.storeId },
-      select: { id: true, name: true, currency: true, phone: true, address: true },
+      select: {
+        id: true, name: true, currency: true, phone: true, address: true,
+        isActive: true, subscriptionPlan: true, subscriptionExpiresAt: true,
+      },
     });
   }
   return c.json({ user: u, store });

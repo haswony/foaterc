@@ -16,6 +16,7 @@ import { useSettings } from '@/store/settings';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import QuickPay from './QuickPay';
+import BlockedScreen from './BlockedScreen';
 
 type Role = 'SUPER_ADMIN' | 'STORE_OWNER' | 'STAFF';
 
@@ -69,6 +70,17 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [me.data, setStore]);
 
   if (!user) return null;
+
+  // Subscription / disabled store gate (for non-super-admin store users)
+  if (user.role !== 'SUPER_ADMIN' && me.data?.store) {
+    const s = me.data.store as { isActive?: boolean; subscriptionPlan?: string; subscriptionExpiresAt?: string | null };
+    if (s.isActive === false) return <BlockedScreen reason="disabled" />;
+    if (s.subscriptionPlan === 'MONTHLY') {
+      const exp = s.subscriptionExpiresAt ? new Date(s.subscriptionExpiresAt) : null;
+      if (!exp || exp.getTime() <= Date.now()) return <BlockedScreen reason="expired" />;
+    }
+  }
+
   const items = navItems.filter((i) => i.roles.includes(user.role));
   const showQuickPay = !!activeStoreId; // need a scoped store for payments
 

@@ -78,6 +78,36 @@ storeRoutes.patch('/:id', requireRole('SUPER_ADMIN'), zValidator('json', updateS
   return c.json({ data: store });
 });
 
+// Subscription management (SUPER_ADMIN)
+const subscriptionSchema = z.object({
+  plan: z.enum(['FREE', 'MONTHLY']),
+  months: z.number().int().min(1).max(60).optional(), // for MONTHLY: how many months to extend/set
+  extend: z.boolean().optional(), // if true: extend from current expiry; else set from now
+});
+
+storeRoutes.post('/:id/subscription', requireRole('SUPER_ADMIN'), zValidator('json', subscriptionSchema), async (c) => {
+  const id = c.req.param('id');
+  const { plan, months, extend } = c.req.valid('json');
+  const store = await prisma.store.findUnique({ where: { id } });
+  if (!store) return c.json({ error: 'المتجر غير موجود' }, 404);
+
+  let expiresAt: Date | null = null;
+  if (plan === 'MONTHLY') {
+    const n = months ?? 1;
+    const base = extend && store.subscriptionExpiresAt && store.subscriptionExpiresAt > new Date()
+      ? new Date(store.subscriptionExpiresAt)
+      : new Date();
+    base.setMonth(base.getMonth() + n);
+    expiresAt = base;
+  }
+
+  const updated = await prisma.store.update({
+    where: { id },
+    data: { subscriptionPlan: plan, subscriptionExpiresAt: expiresAt, isActive: true },
+  });
+  return c.json({ data: updated });
+});
+
 storeRoutes.delete('/:id', requireRole('SUPER_ADMIN'), async (c) => {
   const id = c.req.param('id');
   await prisma.store.delete({ where: { id } });

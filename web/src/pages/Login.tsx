@@ -74,9 +74,6 @@ export default function Login() {
             {loading ? 'جاري الدخول...' : 'دخول'}
           </button>
         </form>
-        <div className="text-xs text-slate-400 mt-7 text-center bg-slate-50 rounded-xl p-3" dir="ltr">
-          admin@system.local / Admin@123
-        </div>
       </div>
     </div>
   );

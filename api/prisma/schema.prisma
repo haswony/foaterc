@@ -36,16 +36,23 @@ enum DebtStatus {
   CLOSED
 }
 
+enum SubscriptionPlan {
+  FREE
+  MONTHLY
+}
+
 model Store {
-  id        String   @id @default(cuid())
-  name      String
-  ownerName String?
-  phone     String?
-  address   String?
-  currency  String   @default("IQD")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String           @id @default(cuid())
+  name                  String
+  ownerName             String?
+  phone                 String?
+  address               String?
+  currency              String           @default("IQD")
+  isActive              Boolean          @default(true)
+  subscriptionPlan      SubscriptionPlan @default(FREE)
+  subscriptionExpiresAt DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
   users     User[]
   customers Customer[]
