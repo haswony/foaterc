@@ -8,7 +8,7 @@ import Money from '@/components/Money';
 
 type Payment = {
   id: string; amount: number; paidAt: string; note: string | null;
-  debt: { customer: { id: string; name: string } };
+  debt: { currency?: 'IQD' | 'USD'; customer: { id: string; name: string } };
   recordedBy: { id: string; name: string } | null;
 };
 
@@ -60,7 +60,7 @@ export default function Payments() {
                       {p.debt.customer.name}
                     </Link>
                   </td>
-                  <td className="table-td font-semibold text-emerald-600"><Money value={p.amount} /></td>
+                  <td className="table-td font-semibold text-emerald-600"><Money value={p.amount} currency={p.debt.currency} /></td>
                   <td className="table-td text-sm text-slate-500">{p.recordedBy?.name || '-'}</td>
                   <td className="table-td text-sm text-slate-500">{p.note || '-'}</td>
                 </tr>

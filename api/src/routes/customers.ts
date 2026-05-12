@@ -21,17 +21,26 @@ customerRoutes.get('/', async (c) => {
     },
     orderBy: { createdAt: 'desc' },
     include: {
-      debts: { select: { amount: true, payments: { select: { amount: true } } } },
+      debts: { select: { amount: true, currency: true, payments: { select: { amount: true } } } },
       _count: { select: { debts: true } },
     },
   });
 
   const data = customers.map((cu) => {
+    const byCur: Record<string, { total: number; paid: number }> = { IQD: { total: 0, paid: 0 }, USD: { total: 0, paid: 0 } };
     let total = 0;
     let paid = 0;
     for (const d of cu.debts) {
-      total += Number(d.amount);
-      for (const p of d.payments) paid += Number(p.amount);
+      const cur = (d as any).currency || 'IQD';
+      const amt = Number(d.amount);
+      total += amt;
+      byCur[cur] = byCur[cur] || { total: 0, paid: 0 };
+      byCur[cur].total += amt;
+      for (const p of d.payments) {
+        const pa = Number(p.amount);
+        paid += pa;
+        byCur[cur].paid += pa;
+      }
     }
     return {
       id: cu.id,
@@ -44,6 +53,10 @@ customerRoutes.get('/', async (c) => {
       totalDebt: +total.toFixed(2),
       totalPaid: +paid.toFixed(2),
       remaining: +(total - paid).toFixed(2),
+      byCurrency: {
+        IQD: { totalDebt: +byCur.IQD.total.toFixed(2), totalPaid: +byCur.IQD.paid.toFixed(2), remaining: +(byCur.IQD.total - byCur.IQD.paid).toFixed(2) },
+        USD: { totalDebt: +byCur.USD.total.toFixed(2), totalPaid: +byCur.USD.paid.toFixed(2), remaining: +(byCur.USD.total - byCur.USD.paid).toFixed(2) },
+      },
     };
   });
   return c.json({ data });

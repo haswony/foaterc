@@ -38,7 +38,7 @@ dashboardRoutes.get('/summary', async (c) => {
       where,
       orderBy: { paidAt: 'desc' },
       take: 8,
-      include: { debt: { select: { customer: { select: { name: true } } } } },
+      include: { debt: { select: { currency: true, customer: { select: { name: true } } } } },
     }),
     prisma.debt.findMany({
       where: debtWhere,

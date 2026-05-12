@@ -35,8 +35,8 @@ type Summary = {
   lateCustomers: { id: string; name: string; phone: string | null; lateCount: number; lateAmount: number; daysLate: number }[];
   dueToday: { id: string; name: string; phone: string | null; totalDue: number; debts: string[] }[];
   months: { key: string; label: string; collected: number; debts: number }[];
-  recentPayments: { id: string; amount: number; paidAt: string; debt: { customer: { name: string } } }[];
-  recentDebts: { id: string; amount: number; createdAt: string; customer: { name: string } }[];
+  recentPayments: { id: string; amount: number; paidAt: string; debt: { currency?: 'IQD' | 'USD'; customer: { name: string } } }[];
+  recentDebts: { id: string; amount: number; createdAt: string; currency?: 'IQD' | 'USD'; customer: { name: string } }[];
 };
 
 function normalizePhoneForWa(phone: string): string {
@@ -366,7 +366,7 @@ export default function Dashboard() {
                       <div className="font-semibold truncate">{p.debt.customer.name}</div>
                       <div className="text-xs text-slate-400" dir="ltr">{formatDate(p.paidAt)}</div>
                     </div>
-                    <div className="text-emerald-600 font-extrabold"><Money value={p.amount} prefix="+" /></div>
+                    <div className="text-emerald-600 font-extrabold"><Money value={p.amount} currency={p.debt.currency} prefix="+" /></div>
                   </li>
                 ))}
               </ul>
@@ -392,7 +392,7 @@ export default function Dashboard() {
                     <div className="font-semibold truncate">{d.customer.name}</div>
                     <div className="text-xs text-slate-400" dir="ltr">{formatDate(d.createdAt)}</div>
                   </div>
-                  <div className="text-brand-700 font-extrabold"><Money value={d.amount} /></div>
+                  <div className="text-brand-700 font-extrabold"><Money value={d.amount} currency={d.currency} /></div>
                 </li>
               ))}
             </ul>

@@ -9,9 +9,11 @@ import { formatMoney, downloadCSV } from '@/lib/format';
 import Money from '@/components/Money';
 import { useConfirm } from '@/components/useConfirm';
 
+type CurTotals = { totalDebt: number; totalPaid: number; remaining: number };
 type Customer = {
   id: string; name: string; phone: string | null; address: string | null; notes: string | null;
   debtsCount: number; totalDebt: number; totalPaid: number; remaining: number;
+  byCurrency?: { IQD: CurTotals; USD: CurTotals };
 };
 
 type DebtFilter = 'all' | 'with_debt' | 'no_debt' | 'paid';
@@ -235,10 +237,14 @@ export default function Customers() {
                   </td>
                   <td className="table-td" dir="ltr">{c.phone || '-'}</td>
                   <td className="table-td">{c.debtsCount}</td>
-                  <td className="table-td"><Money value={c.totalDebt} /></td>
-                  <td className="table-td text-emerald-600"><Money value={c.totalPaid} /></td>
-                  <td className={`table-td font-semibold ${c.remaining > 0 ? 'text-red-600' : 'text-slate-500'}`}>
-                    <Money value={c.remaining} />
+                  <td className="table-td">
+                    <CurrencyCell iqd={c.byCurrency?.IQD.totalDebt ?? c.totalDebt} usd={c.byCurrency?.USD.totalDebt ?? 0} />
+                  </td>
+                  <td className="table-td">
+                    <CurrencyCell iqd={c.byCurrency?.IQD.totalPaid ?? c.totalPaid} usd={c.byCurrency?.USD.totalPaid ?? 0} tone="paid" />
+                  </td>
+                  <td className="table-td font-semibold">
+                    <CurrencyCell iqd={c.byCurrency?.IQD.remaining ?? c.remaining} usd={c.byCurrency?.USD.remaining ?? 0} tone="remaining" />
                   </td>
                   <td className="table-td">
                     <div className="flex gap-2">
@@ -302,6 +308,34 @@ export default function Customers() {
         </form>
       </Modal>
       {ConfirmUI}
+    </div>
+  );
+}
+
+function CurrencyCell({ iqd, usd, tone }: { iqd: number; usd: number; tone?: 'paid' | 'remaining' }) {
+  const hasIQD = iqd > 0;
+  const hasUSD = usd > 0;
+  if (!hasIQD && !hasUSD) {
+    return <span className="text-slate-400">—</span>;
+  }
+  const toneCls =
+    tone === 'paid'
+      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+      : tone === 'remaining'
+        ? 'bg-red-50 text-red-700 border-red-100'
+        : 'bg-slate-50 text-slate-700 border-slate-200';
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {hasIQD && (
+        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold border ${toneCls}`}>
+          <Money value={iqd} currency="IQD" />
+        </span>
+      )}
+      {hasUSD && (
+        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold border ${toneCls}`}>
+          <Money value={usd} currency="USD" />
+        </span>
+      )}
     </div>
   );
 }

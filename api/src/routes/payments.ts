@@ -16,7 +16,7 @@ paymentRoutes.get('/', async (c) => {
     orderBy: { paidAt: 'desc' },
     take: 200,
     include: {
-      debt: { select: { customer: { select: { id: true, name: true } } } },
+      debt: { select: { currency: true, customer: { select: { id: true, name: true } } } },
       recordedBy: { select: { id: true, name: true } },
     },
   });

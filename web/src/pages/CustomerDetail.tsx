@@ -119,7 +119,7 @@ export default function CustomerDetail() {
               {c.debts.map((d: any) => (
                 <tr key={d.id} className="hover:bg-slate-50">
                   <td className="table-td">{formatDate(d.debtDate)}</td>
-                  <td className="table-td font-semibold"><Money value={d.amount} /></td>
+                  <td className="table-td font-semibold"><Money value={d.amount} currency={d.currency} /></td>
                   <td className="table-td">
                     {d.type === 'FULL' ? 'دين' : `أقساط ${d.freq === 'WEEKLY' ? 'أسبوعية' : 'شهرية'} (${d.installments})`}
                   </td>
