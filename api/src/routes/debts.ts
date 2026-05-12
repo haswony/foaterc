@@ -5,6 +5,11 @@ import { prisma } from '../db.js';
 import { authMiddleware, requireStoreId } from '../middleware/auth.js';
 import { buildScheduleDates, splitAmount } from '../lib/schedule.js';
 import type { AppVariables } from '../types.js';
+import { assert } from 'console';
+import EventEmitter, { errorMonitor } from 'events';
+import { deepStrictEqual } from 'assert';
+import { decodeBase64 } from 'bcryptjs';
+import { setDefaultAutoSelectFamily } from 'net';
 
 export const debtRoutes = new Hono<{ Variables: AppVariables }>();
 debtRoutes.use('*', authMiddleware);
@@ -55,6 +60,7 @@ debtRoutes.get('/', async (c) => {
       nextInstallment,
       lastPaymentAt: lastPayment?.paidAt ?? null,
       createdAt: d.createdAt,
+      currency: d.currency,
     };
   });
   if (onlyLate) data = data.filter((d) => d.isLate);
@@ -71,6 +77,7 @@ const createDebtSchema = z
     type: z.enum(['FULL', 'INSTALLMENT']),
     freq: z.enum(['WEEKLY', 'MONTHLY']).optional(),
     installments: z.number().int().positive().optional(),
+    currency: z.enum(['IQD', 'USD']).optional(),
   })
   .refine((d) => d.type === 'FULL' || (d.freq && d.installments && d.installments >= 1), {
     message: 'يجب تحديد التكرار وعدد الأقساط لنوع INSTALLMENT',
@@ -94,6 +101,7 @@ debtRoutes.post('/', zValidator('json', createDebtSchema), async (c) => {
         type: data.type,
         freq: data.type === 'INSTALLMENT' ? data.freq! : null,
         installments: data.type === 'INSTALLMENT' ? data.installments! : null,
+        currency: data.currency || 'IQD',
       },
     });
 
@@ -175,3 +183,5 @@ debtRoutes.post('/:id/restore', async (c) => {
   await prisma.debt.update({ where: { id }, data: { archivedAt: null } });
   return c.json({ ok: true });
 });
+
+

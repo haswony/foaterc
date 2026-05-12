@@ -48,7 +48,7 @@ export default function DebtDetail() {
           customerPhone: d.customer?.phone || '',
           debtAmount: d.amount,
           debtRemaining: Math.max(0, (d.totals?.remaining || 0) - Number(amount)),
-          currency: cur,
+          currency: d.currency || cur,
           storeName: storeInfo?.name,
           storePhone: storeInfo?.phone,
           paymentId: res.data.id,
@@ -68,7 +68,7 @@ export default function DebtDetail() {
       customerName: d.customer?.name || '',
       customerPhone: d.customer?.phone || '',
       debtAmount: d.amount,
-      currency: cur,
+      currency: d.currency || cur,
       storeName: storeInfo?.name,
       storePhone: storeInfo?.phone,
       paymentId: payment.id,
@@ -120,20 +120,20 @@ export default function DebtDetail() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="card p-4">
           <div className="text-xs text-slate-500">المبلغ الأصلي</div>
-          <div className="text-xl font-bold mt-1"><Money value={d.amount} /></div>
+          <div className="text-xl font-bold mt-1"><Money value={d.amount} currency={d.currency} /></div>
         </div>
         <div className="card p-4">
           <div className="text-xs text-slate-500">المدفوع</div>
-          <div className="text-xl font-bold text-emerald-600 mt-1"><Money value={d.totals.totalPaid} /></div>
+          <div className="text-xl font-bold text-emerald-600 mt-1"><Money value={d.totals.totalPaid} currency={d.currency} /></div>
         </div>
         <div className="card p-4">
           <div className="text-xs text-slate-500">المتبقي</div>
-          <div className="text-xl font-bold text-red-600 mt-1"><Money value={d.totals.remaining} /></div>
+          <div className="text-xl font-bold text-red-600 mt-1"><Money value={d.totals.remaining} currency={d.currency} /></div>
         </div>
-        <div className="card p-4">
-          <div className="text-xs text-slate-500">الحالة</div>
-          <div className="text-xl font-bold mt-1">
-            {d.status === 'CLOSED' ? '✅ مسدد' : '⏳ نشط'}
+        <div className={`card p-4 border-2 ${d.status === 'CLOSED' ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          <div className={`text-xs font-semibold ${d.status === 'CLOSED' ? 'text-emerald-600' : 'text-red-600'}`}>الحالة</div>
+          <div className={`text-xl font-extrabold mt-1 ${d.status === 'CLOSED' ? 'text-emerald-700' : 'text-red-700'}`}>
+            {d.status === 'CLOSED' ? '✅ مسدد' : '⏳ غير مسدد'}
           </div>
         </div>
       </div>
@@ -158,8 +158,8 @@ export default function DebtDetail() {
                   <tr key={s.id} className={late ? 'bg-red-50' : ''}>
                     <td className="table-td">{s.seq}</td>
                     <td className={`table-td ${late ? 'text-red-700 font-semibold' : ''}`}>{formatDate(s.dueDate)}</td>
-                    <td className="table-td"><Money value={s.amount} /></td>
-                    <td className="table-td text-emerald-600"><Money value={s.paid} /></td>
+                    <td className="table-td"><Money value={s.amount} currency={d.currency} /></td>
+                    <td className="table-td text-emerald-600"><Money value={s.paid} currency={d.currency} /></td>
                     <td className="table-td">
                       {s.status === 'PAID' ? (
                         <span className="badge bg-emerald-50 text-emerald-700">مدفوع</span>
@@ -198,7 +198,7 @@ export default function DebtDetail() {
               {d.payments.map((p: any) => (
                 <tr key={p.id} className="hover:bg-slate-50">
                   <td className="table-td">{formatDateTime(p.paidAt)}</td>
-                  <td className="table-td font-semibold text-emerald-600"><Money value={p.amount} /></td>
+                  <td className="table-td font-semibold text-emerald-600"><Money value={p.amount} currency={d.currency} /></td>
                   <td className="table-td text-slate-500">{p.note || '-'}</td>
                   <td className="table-td text-sm text-slate-500">{p.recordedBy?.name || '-'}</td>
                   <td className="table-td">

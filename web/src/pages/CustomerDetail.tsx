@@ -121,7 +121,7 @@ export default function CustomerDetail() {
                   <td className="table-td">{formatDate(d.debtDate)}</td>
                   <td className="table-td font-semibold"><Money value={d.amount} /></td>
                   <td className="table-td">
-                    {d.type === 'FULL' ? 'دفعة كاملة' : `أقساط ${d.freq === 'WEEKLY' ? 'أسبوعية' : 'شهرية'} (${d.installments})`}
+                    {d.type === 'FULL' ? 'دين' : `أقساط ${d.freq === 'WEEKLY' ? 'أسبوعية' : 'شهرية'} (${d.installments})`}
                   </td>
                   <td className="table-td text-slate-500">{d.description || '-'}</td>
                   <td className="table-td">

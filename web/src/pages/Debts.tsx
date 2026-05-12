@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { PageHeader, Modal, Empty, ShimmerTable } from '@/components/ui';
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle, Search, X, SlidersHorizontal } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatDate } from '@/lib/format';
 import Money from '@/components/Money';
@@ -24,6 +24,7 @@ type Debt = {
   remaining: number;
   lateInstallments: number;
   isLate: boolean;
+  currency: string | null;
 };
 
 export default function Debts() {
@@ -46,7 +47,17 @@ export default function Debts() {
     type: 'FULL' as 'FULL' | 'INSTALLMENT',
     freq: 'MONTHLY' as 'WEEKLY' | 'MONTHLY',
     installments: 3,
+    currency: 'IQD' as 'IQD' | 'USD',
   });
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  // Advanced filters (select-only)
+  const [typeFilter, setTypeFilter] = useState<'all' | 'FULL' | 'INSTALLMENT'>('all');
+  const [currencyFilter, setCurrencyFilter] = useState<'all' | 'IQD' | 'USD'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_desc' | 'amount_asc' | 'remaining_desc'>('newest');
+  const [amountRange, setAmountRange] = useState<'all' | 'small' | 'medium' | 'large' | 'huge'>('all');
+  const [datePeriod, setDatePeriod] = useState<'all' | 'today' | 'week' | 'month' | 'quarter' | 'year'>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['debts', filter],
@@ -58,7 +69,7 @@ export default function Debts() {
 
   const customers = useQuery({
     queryKey: ['customers', ''],
-    queryFn: () => api<{ data: { id: string; name: string }[] }>('/api/customers'),
+    queryFn: () => api<{ data: { id: string; name: string; phone: string | null }[] }>('/api/customers'),
   });
 
   const create = useMutation({
@@ -74,6 +85,7 @@ export default function Debts() {
           type: form.type,
           freq: form.type === 'INSTALLMENT' ? form.freq : undefined,
           installments: form.type === 'INSTALLMENT' ? Number(form.installments) : undefined,
+          currency: form.currency,
         }),
       }),
     onSuccess: () => {
@@ -91,6 +103,45 @@ export default function Debts() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Apply advanced filters & sorting
+  const periodStart = (() => {
+    const d = new Date();
+    if (datePeriod === 'today') { d.setHours(0, 0, 0, 0); return d; }
+    if (datePeriod === 'week') { d.setDate(d.getDate() - 7); return d; }
+    if (datePeriod === 'month') { d.setMonth(d.getMonth() - 1); return d; }
+    if (datePeriod === 'quarter') { d.setMonth(d.getMonth() - 3); return d; }
+    if (datePeriod === 'year') { d.setFullYear(d.getFullYear() - 1); return d; }
+    return null;
+  })();
+
+  const filteredDebts = (data?.data || [])
+    .filter((d) => {
+      if (typeFilter !== 'all' && d.type !== typeFilter) return false;
+      if (currencyFilter !== 'all' && (d.currency || 'IQD') !== currencyFilter) return false;
+      if (amountRange !== 'all') {
+        const a = d.amount;
+        if (amountRange === 'small' && a >= 100000) return false;
+        if (amountRange === 'medium' && (a < 100000 || a >= 500000)) return false;
+        if (amountRange === 'large' && (a < 500000 || a >= 1000000)) return false;
+        if (amountRange === 'huge' && a < 1000000) return false;
+      }
+      if (periodStart && new Date(d.debtDate) < periodStart) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest': return new Date(a.debtDate).getTime() - new Date(b.debtDate).getTime();
+        case 'amount_desc': return b.amount - a.amount;
+        case 'amount_asc': return a.amount - b.amount;
+        case 'remaining_desc': return b.remaining - a.remaining;
+        default: return new Date(b.debtDate).getTime() - new Date(a.debtDate).getTime();
+      }
+    });
+
+  const advActiveCount = (typeFilter !== 'all' ? 1 : 0)
+    + (currencyFilter !== 'all' ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0)
+    + (amountRange !== 'all' ? 1 : 0) + (datePeriod !== 'all' ? 1 : 0);
+
   return (
     <div>
       <PageHeader
@@ -103,7 +154,7 @@ export default function Debts() {
         }
       />
 
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-3 flex-wrap items-center">
         {(['all', 'late', 'closed'] as const).map((f) => (
           <button
             key={f}
@@ -115,13 +166,99 @@ export default function Debts() {
             {f === 'all' ? 'الكل' : f === 'late' ? 'متأخرة' : 'مسددة'}
           </button>
         ))}
+        <button
+          onClick={() => setShowFilters((v) => !v)}
+          className={`relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            showFilters || advActiveCount > 0
+              ? 'bg-brand-600 text-white'
+              : 'bg-white border text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          <SlidersHorizontal size={14} />
+          فلترة متقدمة
+          {advActiveCount > 0 && (
+            <span className="bg-white text-brand-700 text-xs px-1.5 rounded-full font-bold min-w-[18px] text-center">
+              {advActiveCount}
+            </span>
+          )}
+        </button>
       </div>
+
+      {showFilters && (
+        <div className="card p-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div>
+              <label className="label">النوع</label>
+              <select className="input" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)}>
+                <option value="all">الكل</option>
+                <option value="FULL">دين</option>
+                <option value="INSTALLMENT">أقساط</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">العملة</label>
+              <select className="input" value={currencyFilter} onChange={(e) => setCurrencyFilter(e.target.value as any)}>
+                <option value="all">الكل</option>
+                <option value="IQD">دينار (د.ع)</option>
+                <option value="USD">دولار ($)</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">الترتيب</label>
+              <select className="input" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+                <option value="newest">الأحدث</option>
+                <option value="oldest">الأقدم</option>
+                <option value="amount_desc">المبلغ (الأعلى)</option>
+                <option value="amount_asc">المبلغ (الأقل)</option>
+                <option value="remaining_desc">المتبقي (الأعلى)</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">حجم المبلغ</label>
+              <select className="input" value={amountRange} onChange={(e) => setAmountRange(e.target.value as any)}>
+                <option value="all">الكل</option>
+                <option value="small">صغير (أقل من 100ألف)</option>
+                <option value="medium">متوسط (100ألف - 500ألف)</option>
+                <option value="large">كبير (500ألف - مليون)</option>
+                <option value="huge">ضخم (أكثر من مليون)</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">الفترة الزمنية</label>
+              <select className="input" value={datePeriod} onChange={(e) => setDatePeriod(e.target.value as any)}>
+                <option value="all">جميع الفترات</option>
+                <option value="today">اليوم</option>
+                <option value="week">آخر أسبوع</option>
+                <option value="month">آخر شهر</option>
+                <option value="quarter">آخر 3 أشهر</option>
+                <option value="year">آخر سنة</option>
+              </select>
+            </div>
+          </div>
+          {advActiveCount > 0 && (
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200">
+              <div className="text-sm text-slate-500">
+                <span className="font-semibold text-slate-700">{filteredDebts.length}</span> نتيجة من أصل {data?.data.length || 0}
+              </div>
+              <button
+                onClick={() => {
+                  setTypeFilter('all'); setCurrencyFilter('all');
+                  setSortBy('newest'); setAmountRange('all'); setDatePeriod('all');
+                }}
+                className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-red-600"
+              >
+                <X size={14} /> إعادة تعيين
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="card overflow-x-auto">
         {isLoading ? (
           <div className="p-2"><ShimmerTable rows={5} cols={7} /></div>
-        ) : data?.data.length === 0 ? (
-          <Empty text="لا توجد ديون" />
+        ) : filteredDebts.length === 0 ? (
+          <Empty text={data?.data.length === 0 ? 'لا توجد ديون' : 'لا توجد نتائج مطابقة للفلترة'} />
         ) : (
           <table className="w-full min-w-[800px]">
             <thead>
@@ -136,7 +273,7 @@ export default function Debts() {
               </tr>
             </thead>
             <tbody>
-              {data?.data.map((d) => (
+              {filteredDebts.map((d) => (
                 <tr key={d.id} className={`hover:bg-slate-50 ${d.isLate ? 'bg-red-50/50' : ''}`}>
                   <td className="table-td">
                     <Link to={`/customers/${d.customer.id}`} className="font-semibold text-brand-700 hover:underline">
@@ -144,12 +281,12 @@ export default function Debts() {
                     </Link>
                     <div className="text-xs text-slate-400" dir="ltr">{d.customer.phone}</div>
                   </td>
-                  <td className="table-td font-semibold"><Money value={d.amount} /></td>
+                  <td className="table-td font-semibold"><Money value={d.amount} currency={d.currency} /></td>
                   <td className={`table-td font-semibold ${d.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                    <Money value={d.remaining} />
+                    <Money value={d.remaining} currency={d.currency} />
                   </td>
                   <td className="table-td text-sm">
-                    {d.type === 'FULL' ? 'كاملة' : `${d.freq === 'WEEKLY' ? 'أسبوعي' : 'شهري'} × ${d.installments}`}
+                    {d.type === 'FULL' ? 'دين' : `${d.freq === 'WEEKLY' ? 'أسبوعي' : 'شهري'} × ${d.installments}`}
                   </td>
                   <td className="table-td text-sm">{formatDate(d.debtDate)}</td>
                   <td className="table-td">
@@ -184,12 +321,67 @@ export default function Debts() {
         <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="md:col-span-2">
             <label className="label">الزبون *</label>
-            <select className="input" required value={form.customerId} onChange={(e) => setForm({ ...form, customerId: e.target.value })}>
-              <option value="">— اختر زبون —</option>
-              {customers.data?.data.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <div className="relative">
+              {form.customerId ? (
+                <div className="input flex items-center justify-between gap-2 bg-slate-50">
+                  <span className="font-medium">
+                    {customers.data?.data.find((c) => c.id === form.customerId)?.name || ''}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => { setForm({ ...form, customerId: '' }); setCustomerSearch(''); }}
+                    className="text-slate-400 hover:text-red-500"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    className="input pl-9"
+                    placeholder="ابحث عن زبون..."
+                    value={customerSearch}
+                    onChange={(e) => {
+                      setCustomerSearch(e.target.value);
+                      setShowCustomerDropdown(true);
+                    }}
+                    onFocus={() => setShowCustomerDropdown(true)}
+                  />
+                </div>
+              )}
+              {showCustomerDropdown && !form.customerId && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-auto">
+                  {(() => {
+                    const list = customers.data?.data.filter((c) => {
+                      const q = customerSearch.toLowerCase();
+                      return c.name.toLowerCase().includes(q) || (c.phone && c.phone.includes(q));
+                    }) || [];
+                    if (list.length === 0) {
+                      return (
+                        <div className="px-4 py-3 text-sm text-slate-400 text-center">
+                          لا يوجد زبون مطابق
+                        </div>
+                      );
+                    }
+                    return list.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="w-full text-right px-4 py-2.5 hover:bg-slate-50 text-sm"
+                        onClick={() => {
+                          setForm({ ...form, customerId: c.id });
+                          setCustomerSearch('');
+                          setShowCustomerDropdown(false);
+                        }}
+                      >
+                        {c.name}
+                      </button>
+                    ));
+                  })()}
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="label">المبلغ *</label>
@@ -204,9 +396,16 @@ export default function Debts() {
             <input className="input" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
           </div>
           <div>
+            <label className="label">العملة *</label>
+            <select className="input" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value as any })}>
+              <option value="IQD">دينار عراقي (د.ع)</option>
+              <option value="USD">دولار أمريكي ($)</option>
+            </select>
+          </div>
+          <div>
             <label className="label">نوع الدفع *</label>
             <select className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as any })}>
-              <option value="FULL">دفعة كاملة</option>
+              <option value="FULL">دين</option>
               <option value="INSTALLMENT">أقساط</option>
             </select>
           </div>

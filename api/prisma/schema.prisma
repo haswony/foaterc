@@ -109,6 +109,7 @@ model Debt {
   installments Int?            // total number of installments (if INSTALLMENT)
   status       DebtStatus      @default(ACTIVE)
   archivedAt   DateTime?
+  currency     String          @default("IQD")
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 

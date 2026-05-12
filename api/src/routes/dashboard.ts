@@ -27,6 +27,8 @@ dashboardRoutes.get('/summary', async (c) => {
     todayPaymentsCount,
     todayCustomersServed,
     lateInstallments,
+    dueTodayInstallments,
+    dueTodayFullDebts,
   ] = await Promise.all([
     prisma.debt.aggregate({ where: debtWhere, _sum: { amount: true } }),
     prisma.payment.aggregate({ where, _sum: { amount: true } }),
@@ -78,6 +80,36 @@ dashboardRoutes.get('/summary', async (c) => {
         },
       },
     }),
+    // Due today installments
+    prisma.installment.findMany({
+      where: {
+        debt: { ...(storeId ? { storeId } : {}), archivedAt: null },
+        status: { not: 'PAID' },
+        dueDate: { gte: startOfDay, lt: endOfDay },
+      },
+      include: {
+        debt: {
+          select: {
+            id: true,
+            type: true,
+            amount: true,
+            customer: { select: { id: true, name: true, phone: true } },
+          },
+        },
+      },
+    }),
+    // Due today FULL debts
+    prisma.debt.findMany({
+      where: {
+        ...debtWhere,
+        type: 'FULL',
+        status: 'ACTIVE',
+        dueDate: { gte: startOfDay, lt: endOfDay },
+      },
+      include: {
+        customer: { select: { id: true, name: true, phone: true } },
+      },
+    }),
   ]);
 
   const totalDebt = Number(debtAgg._sum.amount || 0);
@@ -126,6 +158,53 @@ dashboardRoutes.get('/summary', async (c) => {
       daysLate: Math.floor((now.getTime() - x.oldestDue.getTime()) / (24 * 60 * 60 * 1000)),
     }));
 
+  // Process due-today data
+  const dueTodayMap = new Map<string, { id: string; name: string; phone: string | null; totalDue: number; debts: string[] }>();
+  
+  for (const inst of dueTodayInstallments) {
+    const c = inst.debt.customer;
+    const existing = dueTodayMap.get(c.id);
+    const remainingAmt = Number(inst.amount) - Number(inst.paid);
+    if (existing) {
+      existing.totalDue += remainingAmt;
+      if (!existing.debts.includes(inst.debt.id)) existing.debts.push(inst.debt.id);
+    } else {
+      dueTodayMap.set(c.id, {
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        totalDue: remainingAmt,
+        debts: [inst.debt.id],
+      });
+    }
+  }
+  
+  for (const debt of dueTodayFullDebts) {
+    const c = debt.customer;
+    const existing = dueTodayMap.get(c.id);
+    const remainingAmt = Number(debt.amount); // FULL debt - calculate remaining from payments
+    if (existing) {
+      existing.totalDue += remainingAmt;
+      if (!existing.debts.includes(debt.id)) existing.debts.push(debt.id);
+    } else {
+      dueTodayMap.set(c.id, {
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        totalDue: remainingAmt,
+        debts: [debt.id],
+      });
+    }
+  }
+  
+  const dueToday = Array.from(dueTodayMap.values())
+    .sort((a, b) => b.totalDue - a.totalDue)
+    .slice(0, 12)
+    .map((x) => ({
+      ...x,
+      totalDue: +x.totalDue.toFixed(2),
+    }));
+
   // Monthly stats: last 6 months (collections)
   const months: { key: string; label: string; collected: number; debts: number }[] = [];
   for (let k = 5; k >= 0; k--) {
@@ -166,6 +245,7 @@ dashboardRoutes.get('/summary', async (c) => {
       },
       months,
       lateCustomers,
+      dueToday,
       recentPayments: recentPayments.map((p) => ({ ...p, amount: Number(p.amount) })),
       recentDebts: recentDebts.map((d) => ({ ...d, amount: Number(d.amount) })),
     },

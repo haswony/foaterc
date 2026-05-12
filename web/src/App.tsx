@@ -12,6 +12,7 @@ import DebtDetail from '@/pages/DebtDetail';
 import Payments from '@/pages/Payments';
 import Users from '@/pages/Users';
 import Settings from '@/pages/Settings';
+import Developer from '@/pages/Developer';
 
 function Protected({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -60,6 +61,7 @@ export default function App() {
           }
         />
         <Route path="/settings" element={<Protected><Settings /></Protected>} />
+        <Route path="/developer" element={<Protected><Developer /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
