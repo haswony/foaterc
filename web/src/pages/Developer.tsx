@@ -3,7 +3,7 @@ export default function Developer() {
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="text-center text-2xl md:text-3xl font-bold text-slate-700">
         تم تطويره بواسطة{' '}
-        <span className="shimmer-text">حسين سعد</span>
+        <span className="shimmer-text">محمد عادل هيا</span>
       </div>
 
       <style>{`
